@@ -5,41 +5,56 @@ import easygui
 import sys
 
 # read in video file
-cap = cv2.VideoCapture('C:/Users/Lee/Desktop/test_video/GX010223.mp4')
+cap = cv2.VideoCapture('/home/strager/tmp/ZippyBot92/Paracusia PB-0000.jpg')
 
 # variables containing default window size.
-window_width = 1800
-window_height = 1050
-
-# creating background.
-# l_img = np.zeros((window_height, window_width, 3), np.uint8)
+window_width = 1280
+window_height = 720
 
 # original images that that will be resized
-initial_img_width = 4000
-initial_img_height = 3000
+initial_img_width = 1920
+initial_img_height = 1080
 
-# 9 - 7
-number_of_columns = 9
-number_of_rows = 7
+def recalculate_window_stuffs():
+    global cell_height
+    global cell_width
+    global number_of_cells
+    global number_of_columns
+    global number_of_rows
+    global resize_x
+    global resize_y
+    global window_height
+    global window_width
 
-cell_height = window_height / number_of_rows
-# cell_width = window_width / number_of_columns
-cell_width = cell_height * (initial_img_width / initial_img_height)
-# cell_height = cell_width * (initial_img_height / initial_img_width)
-# window_width = int(cell_width * number_of_columns)
+    (_, _, temp_window_width, temp_window_height) = cv2.getWindowImageRect('win')
+    if not (temp_window_width == -1 or temp_window_height == -1):
+        window_width = temp_window_width
+        window_height = temp_window_height
+    print(f"resizing: {window_width}x{window_height}")
 
-resize_x = cell_width / initial_img_width
-resize_y = cell_height / initial_img_height
+    # 9 - 7
+    number_of_columns = 8
+    number_of_rows = 8
 
-# setting up cell widths and asserting cells fit into the window size
-# cell_width = initial_img_width * resize_x # 150
-# cell_height = initial_img_height * resize_y # 200
-assert window_width % cell_width == 0, 'Check that cell_width fits into the windows width'
-assert window_height % cell_height == 0, 'Check that cell_height fits into windows height'
-# amount of columns, rows and total cells in the grid
-# number_of_columns = window_width // cell_width # how many columns there are.
-# number_of_rows = window_height // cell_height # how many rows there are.
-number_of_cells = number_of_rows * number_of_columns  # number of cells in grid
+    cell_height = window_height / number_of_rows
+    # cell_width = window_width / number_of_columns
+    cell_width = cell_height * (initial_img_width / initial_img_height)
+    # cell_height = cell_width * (initial_img_height / initial_img_width)
+    # window_width = int(cell_width * number_of_columns)
+
+    resize_x = cell_width / initial_img_width
+    resize_y = cell_height / initial_img_height
+
+    # setting up cell widths and asserting cells fit into the window size
+    # cell_width = initial_img_width * resize_x # 150
+    # cell_height = initial_img_height * resize_y # 200
+    #assert window_width % cell_width == 0, 'Check that cell_width fits into the windows width'
+    #assert window_height % cell_height == 0, 'Check that cell_height fits into windows height'
+    # amount of columns, rows and total cells in the grid
+    # number_of_columns = window_width // cell_width # how many columns there are.
+    # number_of_rows = window_height // cell_height # how many rows there are.
+    number_of_cells = number_of_rows * number_of_columns  # number of cells in grid
+
 
 # global lists
 coordinates = []
@@ -171,9 +186,13 @@ if not cap.isOpened():
 index = 0
 
 
+cv2.namedWindow('win', cv2.WINDOW_NORMAL)
+cv2.resizeWindow('win', window_width, window_height)
+
 # Read until video is completed
 def image_grid(index, x_offset=0, y_offset=0, i=0):
     cap.set(1, index)
+    recalculate_window_stuffs()
     # resetting image to black each time
     l_img = np.zeros((window_height, window_width, 3), np.uint8)
     cv2.imshow('win', l_img)
@@ -192,6 +211,8 @@ def image_grid(index, x_offset=0, y_offset=0, i=0):
                 s_image = cv2.resize(frame, (0, 0), None, resize_x, resize_y)
 
                 # put small images onto large image
+                x_offset = (i % number_of_columns) * int(cell_width)
+                y_offset = (i // number_of_columns) * int(cell_height)
                 l_img[y_offset:y_offset + s_image.shape[0], x_offset:x_offset + s_image.shape[1]] = s_image
 
                 # show each small images drawn
@@ -201,19 +222,14 @@ def image_grid(index, x_offset=0, y_offset=0, i=0):
                 # i for count of images, index keeps track of where you are in frames
                 i += 1
                 index += 1
-                # lay images into the grid
-                x_offset += int(cell_width)
-                if x_offset == window_width:
-                    x_offset = 0
-                    y_offset += int(cell_height)
-                if y_offset == window_height:
+                if i == number_of_cells:
                     enable_draw_on_grid = True
                     # parameters passed mouse click function
                     param = [l_img, index_for_frame_list]
                     while True:
 
                         cv2.setMouseCallback('win', click_event, param)
-                        c = cv2.waitKey(0)
+                        c = cv2.waitKey(1)
 
                         if c == 27:  # esc to quite
                             print('Esc pressed to Exit')
