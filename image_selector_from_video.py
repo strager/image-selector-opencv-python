@@ -8,7 +8,7 @@ import sys
 cap = cv2.VideoCapture('/home/strager/tmp/ZippyBot92/Paracusia PB-0000.jpg')
 
 # variables containing default window size.
-window_width = 1280
+window_width = 1300
 window_height = 720
 
 # original images that that will be resized
@@ -33,14 +33,14 @@ def recalculate_window_stuffs():
     print(f"resizing: {window_width}x{window_height}")
 
     # 9 - 7
-    number_of_columns = 8
     number_of_rows = 8
 
-    cell_height = window_height / number_of_rows
-    # cell_width = window_width / number_of_columns
-    cell_width = cell_height * (initial_img_width / initial_img_height)
-    # cell_height = cell_width * (initial_img_height / initial_img_width)
-    # window_width = int(cell_width * number_of_columns)
+    cell_height = window_height // number_of_rows
+    cell_width = int(cell_height * (initial_img_width / initial_img_height))
+    cell_aspect_ratio = cell_width / cell_height
+    image_aspect_ratio = initial_img_width / initial_img_height
+    #assert abs(cell_aspect_ratio - image_aspect_ratio) < 0.01, f"cell_aspect_ratio={cell_aspect_ratio} image_aspect_ratio={image_aspect_ratio}"
+    number_of_columns = window_width // cell_width
 
     resize_x = cell_width / initial_img_width
     resize_y = cell_height / initial_img_height
@@ -54,6 +54,7 @@ def recalculate_window_stuffs():
     # number_of_columns = window_width // cell_width # how many columns there are.
     # number_of_rows = window_height // cell_height # how many rows there are.
     number_of_cells = number_of_rows * number_of_columns  # number of cells in grid
+    print(cell_width, cell_height, number_of_rows, number_of_columns)
 
 
 # global lists
